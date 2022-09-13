@@ -39,13 +39,17 @@ def assets():
     is_flag=True,
     help="Production mode copies files. Development mode symlinks files.",
 )
+@click.option(
+    "--node-log-file", default=None, help="Specify node log file (default: None)"
+)
 @pass_cli_config
-def build(cli_config, no_wipe, production):
+def build(cli_config, no_wipe, production, node_log_file):
     """Build the static and assets files on the local installation."""
     commands = AssetsCommands(cli_config)
     commands.update_statics_and_assets(
         force=not no_wipe,  # If no_wipe=True, it means force=False
         flask_env="production" if production else "development",
+        log_file=node_log_file,
     )
 
 
