@@ -29,12 +29,24 @@ class PythonPackageManager(ABC):
     rpc_server: Popen = None
     run_prefix: List = []
 
-    def __init__(self):
-        """Construct."""
+    def ensure_rpc_server_is_running(self):
+        """Ensure rpc server is running."""
+        if self.rpc_server_is_running:
+            return
+
+        # first check if a server is already running. so to use long running rpc server
+        response = run_cmd(self.run_prefix + ["rpc-server", "ping", "--port", "5001"])
+        if "pong" in response.output:
+            self.rpc_server_is_running = True
+            return
+
+        # open if not
         self.rpc_server = Popen(
             self.run_prefix + ["invenio", "rpc-server", "start", "--port", "5001"]
         )
+
         atexit.register(self.cleanup)
+        # check until the server is up and running
         while True:
             response = run_cmd(
                 self.run_prefix + ["rpc-server", "ping", "--port", "5001"]
@@ -94,6 +106,8 @@ class Pipenv(PythonPackageManager):
 
     def send_command(self, *command):
         """Send command to rpc server, default to run_command."""
+        self.ensure_rpc_server_is_running()
+
         if self.rpc_server_is_running:
             # [1:] remove "invenio" from commands
             return [
@@ -169,6 +183,8 @@ class UV(PythonPackageManager):
 
     def send_command(self, *command):
         """Send command to rpc server, default to run_command."""
+        self.ensure_rpc_server_is_running()
+
         if self.rpc_server_is_running:
             # [1:] remove "invenio" from commands
             return [
@@ -291,4 +307,4 @@ class PNPM(JavascriptPackageManager):
 
     def env_overrides(self):
         """Provide environment overrides for building Invenio assets."""
-        return {"INVENIO_ASSETS_NPM_PKG_CLS": "pynpm:PNPMPackage"}
+        return {"WEBPACKEXT_NPM_PKG_CLS": "pynpm:PNPMPackage"}

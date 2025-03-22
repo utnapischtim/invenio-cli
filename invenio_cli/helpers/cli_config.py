@@ -151,6 +151,10 @@ class CLIConfig(object):
         """Returns the project's shortname."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]["project_shortname"]
 
+    def get_rpc_server_port(self):
+        """Returns rpc server port."""
+        return self.private_config[CLIConfig.CLI_SECTION].get("rpc_port", "5001")
+
     def get_search_port(self):
         """Returns the search port."""
         return self.private_config[CLIConfig.CLI_SECTION].get("search_port", "9200")
